@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ .Site.Title }} — collaborative editing in pure Go, server and browser alike</title>
+<meta name="description" content="Pure-Go conflict-free replicated data types for collaborative editing: a replicated text document (crdt) and the gRPC service that carries it between people (collab). CGO_ENABLED=0, 100% coverage, and the same merge logic compiled to js/wasm so a browser tab and the server run one implementation, not two.">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
+    --border: #d0d7de; --accent: #86198f; --accent-fg: #ffffff;
+    --engine: #86198f; --transport: #6b21a8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --card: #161b22;
+      --border: #30363d; --accent: #e879f9; --accent-fg: #0d1117;
+      --engine: #e879f9; --transport: #c4b5fd;
+    }
+  }
+  /* Forced dark (manual toggle wins over the OS preference). */
+  :root[data-theme="dark"] {
+  --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --card: #161b22;
+  --border: #30363d; --accent: #e879f9; --accent-fg: #0d1117;
+  --engine: #e879f9; --transport: #c4b5fd;
+  }
+  /* Forced light (manual toggle wins over the OS preference). */
+  :root[data-theme="light"] {
+  --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
+  --border: #d0d7de; --accent: #86198f; --accent-fg: #ffffff;
+  --engine: #86198f; --transport: #6b21a8;
+  }
+  .theme-toggle {
+    position: fixed; top: 14px; right: 14px; z-index: 10;
+    font: inherit; font-size: .8rem; cursor: pointer; padding: 6px 12px;
+    color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  header { padding: 72px 0 32px; text-align: center; }
+  .logo { width: 88px; height: 88px; margin: 0 auto 18px; display: block; }
+  h1 { font-size: 2.6rem; margin: 0 0 .3em; letter-spacing: -.02em; }
+  .tagline { font-size: 1.2rem; color: var(--muted); margin: 0 auto; max-width: 680px; }
+  .pills { margin: 22px 0 0; }
+  .pill {
+    display: inline-block; margin: 4px; padding: 3px 10px; font-size: .82rem;
+    color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+  }
+  .cta { margin: 30px 0 0; }
+  .btn {
+    display: inline-block; padding: 10px 18px; margin: 4px; border-radius: 8px; text-decoration: none;
+    font-weight: 600; border: 1px solid var(--border);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  .btn.ghost { color: var(--fg); background: transparent; }
+  .lead { color: var(--fg); max-width: 800px; margin: 8px auto 0; text-align: center; }
+  .lead code { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
+  h2.section { text-align: center; margin: 40px 0 4px; font-size: 1.4rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; padding: 16px 0 8px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; }
+  .card h3 { margin: 0 0 .35em; font-size: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+  .card h3 a { text-decoration: none; }
+  .card .accel { color: var(--muted); font-size: .85rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0 0 .6em; }
+  .card p { margin: 0 0 .8em; color: var(--fg); font-size: .95rem; }
+  .card .badges { margin-top: auto; }
+  .card .badges img { height: 20px; vertical-align: middle; }
+  .kind { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
+  .kind.engine { color: var(--engine); }
+  .kind.transport { color: var(--transport); }
+  .card h3 .tags { display: inline-flex; gap: 6px; }
+  .type { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
+  .type.lib { color: var(--accent); border-color: var(--accent); }
+  .type.cli { color: var(--accent-fg); background: var(--accent); border-color: var(--accent); }
+  .principles { color: var(--muted); text-align: center; padding: 10px 0 0; max-width: 820px; margin: 0 auto; }
+  footer { color: var(--muted); text-align: center; padding: 40px 0 56px; font-size: .9rem; }
+  a { color: var(--accent); }
+</style>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script>
+  // Apply the saved theme before first paint to avoid a flash; "system" leaves no attribute.
+  (function(){var m=localStorage.getItem('theme');if(m&&m!=='system')document.documentElement.setAttribute('data-theme',m);})();
+</script>
+</head>
+<body>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light, dark or system theme"><span id="theme-label">🖥️ System</span></button>
+  <header class="wrap">
+    <img class="logo" src="/img/logo.svg" alt="go-crdt logo" width="88" height="88">
+    <h1>go-crdt</h1>
+    <p class="tagline">Pure-Go <strong>collaborative editing</strong> — a replicated text document
+      (<code>crdt</code>) and the service that carries it between the people writing it
+      (<code>collab</code>), with <strong>the same merge logic on the server and in the browser</strong>.</p>
+    <div class="pills">
+      <span class="pill">CGO_ENABLED=0</span>
+      <span class="pill">zero dependencies in the engine</span>
+      <span class="pill"><strong>js/wasm</strong> — one implementation, not two</span>
+      <span class="pill">offline editing, then reconcile</span>
+      <span class="pill">no server arbitration, no operational transform</span>
+      <span class="pill">amd64 · arm64 · riscv64 · loong64 · ppc64le · s390x</span>
+      <span class="pill">100% coverage</span>
+      <span class="pill">fuzzed decoders</span>
+    </div>
+    <div class="cta">
+      <a class="btn primary" href="https://go-crdt.github.io/docs/">Documentation</a>
+      <a class="btn ghost" href="https://github.com/go-crdt">GitHub</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="lead">A <strong>conflict-free replicated data type</strong> settles concurrent edits by
+      the operations themselves, so nothing has to be authoritative. That is the whole point: no
+      server decides who won, no operation is transformed on the way through, a participant can keep
+      typing with the network down, and the server can be restarted without a handover protocol.
+      The alternative — operational transform, as used by ShareDB and Google Docs — needs all three.</p>
+
+    <p class="lead"><strong>Written in Go so the browser can run it too.</strong> The engine compiles
+      to <code>js/wasm</code>, which means a browser tab and the server execute the <em>same</em>
+      merge implementation rather than two that have to agree. A JavaScript client paired with a Go
+      server cannot make that claim. Mounted on
+      <a href="https://github.com/grpc-transports/websocket">grpc-transports/websocket</a> the service
+      reaches a browser with no sidecar and full bidirectional streaming.</p>
+
+    <h2 class="section">Repositories</h2>
+    <section class="grid">
+      {{ range .Site.Params.repos }}
+      <article class="card">
+        <h3>
+          <a href="https://github.com/go-crdt/{{ .name }}"><code>{{ .name }}</code></a>
+          <span class="tags"><span class="type {{ .type }}">{{ .type }}</span><span class="kind {{ .kind }}">{{ .kind }}</span></span>
+        </h3>
+        <p class="accel">{{ .what }}</p>
+        <p class="arch" style="font-size:.85rem;font-weight:600;margin:.3rem 0 0;color:var(--accent)">{{ .proof }}</p>
+        <p>{{ .result }}</p>
+        <div class="badges">
+          <a href="https://github.com/go-crdt/{{ .name }}/actions/workflows/ci.yml"><img src="https://github.com/go-crdt/{{ .name }}/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+          <img src="https://img.shields.io/badge/coverage-100%25-brightgreen" alt="coverage 100%">
+        </div>
+      </article>
+      {{ end }}
+    </section>
+
+    <h2 class="section">How convergence is proven</h2>
+    <p class="principles">Randomised sessions with late, reordered and duplicated delivery are a
+      start, not a proof — they sample the space of orderings rather than covering it. So small
+      concurrent histories are also replayed in <strong>every possible order</strong>, and replicas
+      are compared on their <em>encoded state</em> rather than merely their text, because agreeing on
+      the text is the weaker claim. Every decoder is fuzzed, and doing so found five states a
+      snapshot could describe that no replica could ever reach. The end-to-end gate runs three
+      replicas across two runtimes — one native, two compiled to WebAssembly and executed by Node
+      through a real WebSocket — and requires all three to converge with no character lost. A skipped
+      test is not a passing one, so CI fails that job when the toolchain is missing rather than
+      quietly turning it green.</p>
+  </main>
+
+  <footer class="wrap">
+    BSD-3-Clause · <a href="https://github.com/go-crdt">github.com/go-crdt</a> ·
+    transport by <a href="https://github.com/grpc-transports/websocket">grpc-transports</a>
+  </footer>
+  <script>
+  (function(){
+    var order=['system','light','dark'], root=document.documentElement;
+    var labels={system:'🖥️ System',light:'☀️ Light',dark:'🌙 Dark'};
+    function apply(m){ if(m==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',m);} localStorage.setItem('theme',m); var el=document.getElementById('theme-label'); if(el)el.textContent=labels[m]; }
+    var mode=localStorage.getItem('theme')||'system'; apply(mode);
+    var btn=document.getElementById('theme-toggle');
+    if(btn) btn.addEventListener('click',function(){ mode=order[(order.indexOf(mode)+1)%order.length]; apply(mode); });
+  })();
+  </script>
+</body>
+</html>

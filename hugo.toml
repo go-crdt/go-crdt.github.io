@@ -1,0 +1,24 @@
+baseURL = "https://go-crdt.github.io/"
+title = "go-crdt"
+disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+# Each repo card. "kind" says what layer it is; "type" says whether it is a
+# library you import or a service you run. "result" is the honest headline —
+# what is proven, and by what.
+[[params.repos]]
+  name = "crdt"
+  what = "Doc, Op, VersionVector, Snapshot, awareness"
+  kind = "engine"
+  type = "lib"
+  proof = "convergence proven by exhaustive permutation, not sampling"
+  result = "A replicated text document: any number of replicas edit at once, offline, over an unreliable transport, and converge. RGA sequence with tombstones; operations carry a per-site sequence number for identity and a Lamport clock for ordering. Zero dependencies, CGO=0, 100% statement coverage, and the whole suite — convergence properties included — runs as WebAssembly under Node in CI."
+[[params.repos]]
+  name = "collab"
+  what = "Collab gRPC service, Server, Client"
+  kind = "transport"
+  type = "lib"
+  proof = "three replicas across two runtimes converge, in CI"
+  result = "Carries a document between the people editing it: a per-document hub that fans out operations, welcomes late joiners with a snapshot, and keeps presence. The server arbitrates nothing — it applies what it is sent and passes it on — so a participant may edit while disconnected and the server may be restarted without anyone losing work. 100% coverage; the acceptance test runs two WebAssembly participants against a native one over a real WebSocket."

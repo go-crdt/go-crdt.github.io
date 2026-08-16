@@ -13,8 +13,8 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   what = "Doc, Op, VersionVector, Snapshot, awareness"
   kind = "engine"
   type = "lib"
-  proof = "convergence proven by exhaustive permutation, not sampling"
-  result = "A replicated text document: any number of replicas edit at once, offline, over an unreliable transport, and converge. RGA sequence with tombstones; operations carry a per-site sequence number for identity and a Lamport clock for ordering. Zero dependencies, CGO=0, 100% statement coverage, and the whole suite — convergence properties included — runs as WebAssembly under Node in CI."
+  proof = "a real 259 778-edit history replays in 54.6 ms and matches, character for character"
+  result = "A replicated text document: any number of replicas edit at once, offline, over an unreliable transport, and converge. Characters are stored as runs — a thousand typed in a row cost one header and their text — and the document walks both ways, so editing stays local. Convergence is proven by exhaustive permutation, not sampling. Zero dependencies, CGO=0, 100% statement coverage, and the whole suite runs as WebAssembly under Node in CI."
 [[params.repos]]
   name = "collab"
   what = "Collab gRPC service, Server, Client"

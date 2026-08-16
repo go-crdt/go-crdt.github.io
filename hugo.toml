@@ -13,7 +13,7 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   what = "Doc, Op, VersionVector, Snapshot, awareness"
   kind = "engine"
   type = "lib"
-  proof = "a real 259 778-edit history replays in 54.6 ms and matches, character for character"
+  proof = "a real 259 778-edit history replays in 24.4 ms and matches, character for character"
   result = "A replicated text document: any number of replicas edit at once, offline, over an unreliable transport, and converge. Characters are stored as runs — a thousand typed in a row cost one header and their text — and the document walks both ways, so editing stays local. Convergence is proven by exhaustive permutation, not sampling. Zero dependencies, CGO=0, 100% statement coverage, and the whole suite runs as WebAssembly under Node in CI."
 [[params.repos]]
   name = "collab"
@@ -21,4 +21,4 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   kind = "transport"
   type = "lib"
   proof = "three replicas across two runtimes converge, in CI"
-  result = "Carries a document between the people editing it: a per-document hub that fans out operations, welcomes late joiners with a snapshot, and keeps presence. The server arbitrates nothing — it applies what it is sent and passes it on — so a participant may edit while disconnected and the server may be restarted without anyone losing work. 100% coverage; the acceptance test runs two WebAssembly participants against a native one over a real WebSocket."
+  result = "Carries a document between the people editing it: a per-document hub that fans out operations, welcomes late joiners with a snapshot, and keeps presence. The server arbitrates nothing — it applies what it is sent and passes it on — so a participant may edit while disconnected and the server may be restarted without anyone losing work. Documents persist to memory or PostgreSQL, and who may open which is decided per session. 100% coverage; the acceptance test runs two WebAssembly participants against a native one over a real WebSocket."

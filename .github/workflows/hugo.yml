@@ -1,4 +1,4 @@
-# Build + deploy the Hugo site to GitHub Pages on every push to main.
+# Build the Hugo site on every pull request, and deploy it on every push to main.
 # Adapted from the official Hugo template at
 # https://gohugo.io/host-and-deploy/host-on-github-pages/.
 
@@ -7,19 +7,21 @@ name: Deploy Hugo site to Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
-# Allow only one concurrent deployment, skipping runs queued between
-# the run in-progress and latest queued. Don't cancel in-progress
-# runs — we want them to finish before a new build replaces them.
+# Allow only one concurrent deployment, skipping runs queued between the run
+# in-progress and latest queued. Don't cancel in-progress runs — we want them to
+# finish before a new build replaces them. A pull request gets a group of its
+# own, so a check on a branch never queues behind a deployment of main.
 concurrency:
-  group: "pages"
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
+# Only the deployment needs to write anything; a pull-request build reads.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 env:
   # Pin Hugo so site builds don't break when a new release ships
@@ -41,11 +43,16 @@ jobs:
         with:
           submodules: recursive
 
+      # Pages is only configured for what is going to be published. A pull
+      # request is checking that the site builds, which needs no base URL and
+      # no Pages permissions.
       - name: Setup Pages
         id: pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Build
+        if: github.event_name != 'pull_request'
         env:
           HUGO_ENVIRONMENT: production
           HUGO_ENV: production
@@ -55,12 +62,24 @@ jobs:
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
 
+      - name: Build (pull request)
+        if: github.event_name == 'pull_request'
+        env:
+          HUGO_ENVIRONMENT: production
+          HUGO_ENV: production
+        run: hugo --gc --minify
+
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
   deploy:
+    if: github.event_name != 'pull_request'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

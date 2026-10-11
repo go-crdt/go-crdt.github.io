@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{{/* Dark Reader repaints pages that already draw their own dark theme, as this one does: ask it to stand aside. */}}
+<meta name="darkreader-lock">
 <title>{{ .Site.Title }} — collaborative editing in pure Go, server and browser alike</title>
 <meta name="description" content="Pure-Go conflict-free replicated data types for collaborative editing: a replicated text document (crdt) and the gRPC service that carries it between people (collab). CGO_ENABLED=0, 100% coverage, and the same merge logic compiled to js/wasm so a browser tab and the server run one implementation, not two.">
 <style>

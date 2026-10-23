@@ -43,6 +43,12 @@ jobs:
         with:
           submodules: recursive
 
+      # Hugo resolves the landingkit module (hugo.toml [module]) with the go
+      # command, at the version go.mod pins.
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
       # Pages is only configured for what is going to be published. A pull
       # request is checking that the site builds, which needs no base URL and
       # no Pages permissions.

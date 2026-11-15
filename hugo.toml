@@ -48,3 +48,13 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   chipFgDark = "#dc88e7"
   statsEnd = "#f0cbf4"
   bandText = "#f5dcf8"
+
+# The hero's buttons, rendered by landingkit's cta.html in the kit's order.
+[[params.cta]]
+  kind  = "docs"
+  href  = "https://go-crdt.github.io/docs/"
+  label = "Documentation"
+[[params.cta]]
+  kind  = "github"
+  href  = "https://github.com/go-crdt"
+  label = "GitHub"
